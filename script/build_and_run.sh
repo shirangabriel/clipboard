@@ -2,7 +2,7 @@
 set -euo pipefail
 
 MODE="${1:-run}"
-VERSION="${2:-${VERSION:-0.1.0}}"
+VERSION="${2:-${VERSION:-0.1.1}}"
 APP_NAME="Clipboard"
 BUNDLE_ID="com.gabe.Clipboard"
 MIN_SYSTEM_VERSION="14.0"
@@ -33,10 +33,20 @@ write_info_plist() {
   <string>$BUNDLE_ID</string>
   <key>CFBundleName</key>
   <string>$APP_NAME</string>
+  <key>CFBundleDisplayName</key>
+  <string>$APP_NAME</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>$VERSION</string>
+  <key>CFBundleVersion</key>
+  <string>$VERSION</string>
+  <key>LSApplicationCategoryType</key>
+  <string>public.app-category.utilities</string>
   <key>LSMinimumSystemVersion</key>
   <string>$MIN_SYSTEM_VERSION</string>
+  <key>NSHumanReadableCopyright</key>
+  <string>Copyright (c) 2026 Gabe. All rights reserved.</string>
   <key>NSPrincipalClass</key>
   <string>NSApplication</string>
 </dict>

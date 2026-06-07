@@ -2,8 +2,8 @@ import SwiftUI
 
 struct MenuBarContentView: View {
     let store: ClipboardStore
-    let stateFilePath: String
     let copy: (String) -> Void
+    let openSettings: () -> Void
     let onHeightChange: (CGFloat) -> Void
 
     @State private var searchText = ""
@@ -12,18 +12,11 @@ struct MenuBarContentView: View {
     @State private var favoriteBeingRenamed: UUID?
     @State private var renameText = ""
     @State private var favoriteRenameText = ""
-    @State private var showingSettings = false
     @State private var showingAllHistory = false
     @FocusState private var searchFocused: Bool
 
     var body: some View {
-        Group {
-            if showingSettings {
-                settingsView
-            } else {
-                mainView
-            }
-        }
+        mainView
         .frame(width: 330, height: preferredHeight)
         .background(AppTheme.surface.ignoresSafeArea())
         .preferredColorScheme(store.state.settings.appearance.colorScheme)
@@ -40,9 +33,7 @@ struct MenuBarContentView: View {
 
     private var mainView: some View {
         VStack(alignment: .leading, spacing: 0) {
-            MenuBarHeaderView {
-                showingSettings = true
-            }
+            MenuBarHeaderView(showSettings: openSettings)
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
@@ -81,17 +72,6 @@ struct MenuBarContentView: View {
             }
         }
         .padding(.top, 24)
-    }
-
-    private var settingsView: some View {
-        MenuBarSettingsView(
-            stateFilePath: stateFilePath,
-            appearance: appearanceBinding,
-            goBack: {
-                showingSettings = false
-                searchFocused = true
-            }
-        )
     }
 
     private var addSectionBar: some View {
@@ -183,13 +163,6 @@ struct MenuBarContentView: View {
 
     private var shouldShowHistoryToggle: Bool {
         filters.shouldShowHistoryToggle
-    }
-
-    private var appearanceBinding: Binding<AppAppearance> {
-        Binding(
-            get: { store.state.settings.appearance },
-            set: { store.setAppearance($0) }
-        )
     }
 
     private func sectionDividerIfNeeded(_ visible: Bool) -> some View {

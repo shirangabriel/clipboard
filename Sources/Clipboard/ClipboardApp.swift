@@ -7,14 +7,19 @@ struct ClipboardApp: App {
 
     var body: some Scene {
         Settings {
-            EmptyView()
+            ClipboardSettingsView(store: ClipboardEnvironment.store)
         }
     }
 }
 
 @MainActor
+enum ClipboardEnvironment {
+    static let store = ClipboardStore()
+}
+
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private let store = ClipboardStore()
+    private let store = ClipboardEnvironment.store
     private let pasteboard = PasteboardService()
     private var hotKeys: HotKeyService?
     private var statusItem: NSStatusItem?
@@ -51,9 +56,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         popover.contentViewController = NSHostingController(
             rootView: MenuBarContentView(
                 store: store,
-                stateFilePath: store.stateURL.path,
                 copy: { [weak self] value in
                     self?.copyValue(value)
+                },
+                openSettings: { [weak self] in
+                    self?.openSettings()
                 },
                 onHeightChange: { [weak self] height in
                     self?.popover.contentSize = NSSize(width: 330, height: height)
@@ -80,6 +87,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         pasteboard.copy(value)
         showCopiedStatus()
         popover.performClose(nil)
+    }
+
+    private func openSettings() {
+        popover.performClose(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     }
 
     private func showCopiedStatus() {

@@ -103,7 +103,7 @@ script/build_and_run.sh --verify
 Create a release zip and print its SHA-256 checksum:
 
 ```sh
-script/build_and_run.sh --package 0.1.0
+script/build_and_run.sh --package 0.1.1
 ```
 
 Release artifacts are written to `dist/`, which is ignored by git.
