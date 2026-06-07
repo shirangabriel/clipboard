@@ -1,0 +1,57 @@
+import SwiftUI
+
+struct FavoriteRow: View {
+    let favorite: FavoriteItem
+    let copy: (String) -> Void
+    let delete: () -> Void
+
+    @State private var isHovering = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Button {
+                copy(favorite.value)
+            } label: {
+                rowLabel
+            }
+            .buttonStyle(.plain)
+            .help(favorite.value)
+            .frame(maxWidth: .infinity)
+            .contextMenu {
+                Button("Copy", action: { copy(favorite.value) })
+                Button("Remove Favorite", systemImage: "trash", role: .destructive, action: delete)
+            }
+
+            IconButton(systemName: "trash", label: "Remove Favorite", action: delete)
+        }
+        .frame(height: 31)
+        .padding(.horizontal, 4)
+        .background(isHovering ? AppTheme.hover : Color.clear)
+        .clipShape(.rect(cornerRadius: 8))
+        .onHover { isHovering = $0 }
+    }
+
+    private var rowLabel: some View {
+        HStack(spacing: 11) {
+            Text("\(favorite.slot)")
+                .font(.caption)
+                .bold()
+                .foregroundStyle(AppTheme.primary)
+                .frame(width: 22, height: 22)
+                .overlay {
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(AppTheme.primary, lineWidth: 1.5)
+                }
+                .accessibilityLabel("Favorite \(favorite.slot)")
+
+            Text(favorite.value.menuPreview)
+                .font(.callout)
+                .foregroundStyle(AppTheme.primary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+
+            Spacer(minLength: 8)
+        }
+        .contentShape(Rectangle())
+    }
+}
