@@ -12,7 +12,7 @@ A macOS menu bar clipboard utility for text history, user sections, and speed-di
 - History defaults to 20 retained text items.
 - No default user sections on first launch.
 - User-created sections are independently collapsible and persisted.
-- Click an item to copy it and show copied feedback.
+- Click an item to copy it and briefly show `Copied!` in the menu bar.
 - Drag history items into sections; drag section items between sections or within a section.
 - Hover rows to reveal delete and favorite actions.
 - Favorites are independent text copies with optional display names, limited to 9 speed-dial slots.

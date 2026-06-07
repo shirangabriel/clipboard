@@ -18,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let pasteboard = PasteboardService()
     private var hotKeys: HotKeyService?
     private var statusItem: NSStatusItem?
+    private var copyFeedbackTask: Task<Void, Never>?
     private let popover = NSPopover()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -38,7 +39,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func configureStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "Clipboard")
+        configureClipboardStatusIcon(on: item)
         item.button?.action = #selector(togglePopover)
         item.button?.target = self
         statusItem = item
@@ -77,6 +78,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func copyValue(_ value: String) {
         pasteboard.copy(value)
+        showCopiedStatus()
+    }
+
+    private func showCopiedStatus() {
+        copyFeedbackTask?.cancel()
+        statusItem?.length = NSStatusItem.variableLength
+        statusItem?.button?.image = nil
+        statusItem?.button?.title = "Copied!"
+
+        copyFeedbackTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(900))
+            guard !Task.isCancelled, let statusItem else { return }
+            configureClipboardStatusIcon(on: statusItem)
+            copyFeedbackTask = nil
+        }
+    }
+
+    private func configureClipboardStatusIcon(on item: NSStatusItem) {
+        item.length = NSStatusItem.squareLength
+        item.button?.title = ""
+        item.button?.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "Clipboard")
     }
 
     private func handleHotKey(_ action: HotKeyService.HotKeyAction) {
@@ -85,7 +107,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             showPopover()
         case .copyFavorite(let slot):
             guard let value = store.favoriteValue(for: slot) else { return }
-            pasteboard.copy(value)
+            copyValue(value)
         }
     }
 }

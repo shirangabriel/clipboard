@@ -7,12 +7,11 @@ struct FavoriteRow: View {
     let rename: () -> Void
 
     @State private var isHovering = false
-    @State private var isCopied = false
 
     var body: some View {
         HStack(spacing: 8) {
             Button {
-                copyValue()
+                copy(favorite.value)
             } label: {
                 rowLabel
             }
@@ -21,19 +20,9 @@ struct FavoriteRow: View {
             .accessibilityLabel("Copy favorite \(favorite.slot), shortcut Control Option Command \(favorite.slot)")
             .frame(maxWidth: .infinity)
             .contextMenu {
-                Button("Copy", action: copyValue)
+                Button("Copy", action: { copy(favorite.value) })
                 Button("Rename", systemImage: "pencil", action: rename)
                 Button("Remove Favorite", systemImage: "star.fill", role: .destructive, action: remove)
-            }
-
-            if isCopied {
-                Label("Copied", systemImage: "checkmark")
-                    .labelStyle(.iconOnly)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(AppTheme.accent)
-                    .frame(width: 28, height: 28)
-                    .transition(.opacity)
-                    .accessibilityLabel("Copied")
             }
 
             IconButton(systemName: "star.fill", label: "Remove Favorite", action: remove)
@@ -67,18 +56,5 @@ struct FavoriteRow: View {
             Spacer(minLength: 8)
         }
         .contentShape(Rectangle())
-    }
-
-    private func copyValue() {
-        copy(favorite.value)
-        withAnimation(.easeOut(duration: 0.12)) {
-            isCopied = true
-        }
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(900))
-            withAnimation(.easeOut(duration: 0.2)) {
-                isCopied = false
-            }
-        }
     }
 }

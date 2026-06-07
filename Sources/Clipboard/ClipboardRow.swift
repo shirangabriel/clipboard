@@ -25,12 +25,11 @@ struct ClipboardRow: View {
     }
 
     @State private var isHovering = false
-    @State private var isCopied = false
 
     var body: some View {
         HStack(spacing: 8) {
             Button {
-                copyValue()
+                copy(value)
             } label: {
                 rowLabel
             }
@@ -38,19 +37,9 @@ struct ClipboardRow: View {
             .help(value)
             .frame(maxWidth: .infinity)
             .contextMenu {
-                Button("Copy", action: copyValue)
+                Button("Copy", action: { copy(value) })
                 Button(favoriteActionLabel, systemImage: favoriteIcon, action: toggleFavorite)
                 Button("Delete", systemImage: "trash", role: .destructive, action: delete)
-            }
-
-            if isCopied {
-                Label("Copied", systemImage: "checkmark")
-                    .labelStyle(.iconOnly)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(AppTheme.accent)
-                    .frame(width: 28, height: 28)
-                    .transition(.opacity)
-                    .accessibilityLabel("Copied")
             }
 
             IconButton(systemName: favoriteIcon, label: favoriteActionLabel, action: toggleFavorite)
@@ -90,18 +79,5 @@ struct ClipboardRow: View {
 
     private var favoriteActionLabel: String {
         isFavorite ? "Remove Favorite" : "Add to Favorites"
-    }
-
-    private func copyValue() {
-        copy(value)
-        withAnimation(.easeOut(duration: 0.12)) {
-            isCopied = true
-        }
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(900))
-            withAnimation(.easeOut(duration: 0.2)) {
-                isCopied = false
-            }
-        }
     }
 }

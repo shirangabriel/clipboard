@@ -167,7 +167,14 @@ struct MenuBarContentView: View {
     }
 
     private var favoritesSection: some View {
-        SectionBlock(title: "Favorites", collapsed: false, onToggle: nil) {
+        SectionBlock(
+            title: "Favorites",
+            collapsed: false,
+            onToggle: nil,
+            trailingMenu: {
+                favoriteShortcutHint
+            }
+        ) {
             ForEach(filteredFavorites) { favorite in
                 if favoriteBeingRenamed == favorite.id {
                     favoriteRenameRow(favorite)
@@ -184,6 +191,16 @@ struct MenuBarContentView: View {
                 }
             }
         }
+    }
+
+    private var favoriteShortcutHint: some View {
+        Text("⌃⌥⌘1-9")
+            .font(.system(size: 11, weight: .medium))
+            .lineLimit(1)
+        .foregroundStyle(AppTheme.muted)
+        .frame(height: 21)
+        .help("Control Option Command 1 through 9 copies a favorite")
+        .accessibilityLabel("Favorite shortcuts: Control Option Command 1 through 9")
     }
 
     private func userSection(_ section: ClipboardSection) -> some View {
