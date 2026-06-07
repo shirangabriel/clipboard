@@ -18,6 +18,11 @@ let package = Package(
                 .linkedFramework("Carbon"),
                 .linkedFramework("SwiftUI")
             ]
+        ),
+        .testTarget(
+            name: "ClipboardTests",
+            dependencies: ["Clipboard"],
+            path: "Tests/ClipboardTests"
         )
     ]
 )

@@ -69,7 +69,7 @@ struct ClipboardSection: Codable, Identifiable, Equatable {
 struct ClipboardItem: Codable, Identifiable, Equatable, Hashable {
     var id: UUID = UUID()
     var value: String
-    var createdAt: Date = Date()
+    var createdAt: Date = .now
 }
 
 struct FavoriteItem: Codable, Identifiable, Equatable, Hashable {
@@ -77,7 +77,7 @@ struct FavoriteItem: Codable, Identifiable, Equatable, Hashable {
     var slot: Int
     var value: String
     var name: String?
-    var createdAt: Date = Date()
+    var createdAt: Date = .now
 
     var displayName: String {
         guard let name, !name.isEmpty else { return value }

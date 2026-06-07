@@ -17,6 +17,14 @@ final class ClipboardStore {
         self.state = Self.loadState(from: stateURL, backupURL: backupURL)
     }
 
+    init(stateURL: URL, backupURL: URL, initialState: ClipboardState? = nil) {
+        self.stateURL = stateURL
+        self.backupURL = backupURL
+        self.state = initialState ?? Self.loadState(from: stateURL, backupURL: backupURL)
+    }
+
+    // MARK: - History
+
     func addHistoryValue(_ value: String) {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
@@ -28,6 +36,13 @@ final class ClipboardStore {
         }
         save()
     }
+
+    func deleteHistoryItem(_ itemID: UUID) {
+        state.history.removeAll { $0.id == itemID }
+        save()
+    }
+
+    // MARK: - Sections
 
     func createSection(named name: String) {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -53,11 +68,6 @@ final class ClipboardStore {
     func toggleSection(_ sectionID: UUID) {
         guard let index = state.sections.firstIndex(where: { $0.id == sectionID }) else { return }
         state.sections[index].collapsed.toggle()
-        save()
-    }
-
-    func deleteHistoryItem(_ itemID: UUID) {
-        state.history.removeAll { $0.id == itemID }
         save()
     }
 
@@ -90,13 +100,12 @@ final class ClipboardStore {
         save()
     }
 
-    func favorite(_ value: String) {
-        if state.favorites.contains(where: { $0.value == value }) {
-            return
-        }
+    // MARK: - Favorites
 
-        let usedSlots = Set(state.favorites.map(\.slot))
-        guard let slot = (1...9).first(where: { !usedSlots.contains($0) }) else {
+    func favorite(_ value: String) {
+        guard !state.favorites.contains(where: { $0.value == value }),
+              let slot = firstAvailableFavoriteSlot()
+        else {
             return
         }
 
@@ -134,6 +143,13 @@ final class ClipboardStore {
         state.favorites.first(where: { $0.slot == slot })?.value
     }
 
+    private func firstAvailableFavoriteSlot() -> Int? {
+        let usedSlots = Set(state.favorites.map(\.slot))
+        return (1...9).first { !usedSlots.contains($0) }
+    }
+
+    // MARK: - Settings
+
     func setAppearance(_ appearance: AppAppearance) {
         guard state.settings.appearance != appearance else { return }
         state.settings.appearance = appearance
@@ -144,6 +160,8 @@ final class ClipboardStore {
         state.settings.historyCollapsed.toggle()
         save()
     }
+
+    // MARK: - Persistence
 
     private func save() {
         do {
