@@ -17,16 +17,7 @@ struct MenuBarContentView: View {
     @FocusState private var searchFocused: Bool
 
     var body: some View {
-        ZStack {
-            AppTheme.surface.ignoresSafeArea()
-
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(AppTheme.surface)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .stroke(Color.white.opacity(0.14), lineWidth: 1)
-                }
-
+        Group {
             if showingSettings {
                 settingsView
             } else {
@@ -34,6 +25,7 @@ struct MenuBarContentView: View {
             }
         }
         .frame(width: 330, height: preferredHeight)
+        .background(AppTheme.surface.ignoresSafeArea())
         .font(.system(size: 13, weight: .regular))
         .foregroundStyle(AppTheme.primary)
         .onAppear {
