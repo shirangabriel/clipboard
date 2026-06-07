@@ -11,5 +11,11 @@ cask "clipboard" do
 
   app "Clipboard.app"
 
+  postflight do
+    system_command "/usr/bin/xattr",
+                   args: ["-dr", "com.apple.quarantine", "#{appdir}/Clipboard.app"],
+                   must_succeed: false
+  end
+
   zap trash: "~/Library/Application Support/Clipboard"
 end
