@@ -134,6 +134,17 @@ final class ClipboardStore {
         state.favorites.first(where: { $0.slot == slot })?.value
     }
 
+    func setAppearance(_ appearance: AppAppearance) {
+        guard state.settings.appearance != appearance else { return }
+        state.settings.appearance = appearance
+        save()
+    }
+
+    func toggleHistoryCollapsed() {
+        state.settings.historyCollapsed.toggle()
+        save()
+    }
+
     private func save() {
         do {
             try FileManager.default.createDirectory(at: stateURL.deletingLastPathComponent(), withIntermediateDirectories: true)

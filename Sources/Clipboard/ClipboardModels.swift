@@ -10,6 +10,53 @@ struct ClipboardState: Codable, Equatable {
 
 struct ClipboardSettings: Codable, Equatable {
     var historyLimit: Int = 20
+    var appearance: AppAppearance = .system
+    var historyCollapsed: Bool = false
+
+    private enum CodingKeys: String, CodingKey {
+        case historyLimit
+        case appearance
+        case historyCollapsed
+    }
+
+    init() {}
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        historyLimit = try container.decodeIfPresent(Int.self, forKey: .historyLimit) ?? 20
+        appearance = try container.decodeIfPresent(AppAppearance.self, forKey: .appearance) ?? .system
+        historyCollapsed = try container.decodeIfPresent(Bool.self, forKey: .historyCollapsed) ?? false
+    }
+}
+
+enum AppAppearance: String, Codable, CaseIterable, Identifiable {
+    case system
+    case light
+    case dark
+
+    var id: Self { self }
+
+    var title: String {
+        switch self {
+        case .system:
+            "System"
+        case .light:
+            "Light"
+        case .dark:
+            "Dark"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .system:
+            "circle.lefthalf.filled"
+        case .light:
+            "sun.max"
+        case .dark:
+            "moon"
+        }
+    }
 }
 
 struct ClipboardSection: Codable, Identifiable, Equatable {

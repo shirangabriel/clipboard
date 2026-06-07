@@ -26,6 +26,7 @@ struct MenuBarContentView: View {
         }
         .frame(width: 330, height: preferredHeight)
         .background(AppTheme.surface.ignoresSafeArea())
+        .preferredColorScheme(store.state.settings.appearance.colorScheme)
         .font(.system(size: 13, weight: .regular))
         .foregroundStyle(AppTheme.primary)
         .onAppear {
@@ -81,12 +82,13 @@ struct MenuBarContentView: View {
         let favoritesHeight = filteredFavorites.isEmpty ? 0 : 31 + CGFloat(filteredFavorites.count) * 33
         let sectionsHeight = filteredSections.reduce(CGFloat(0)) { total, section in
             let visibleItems = section.collapsed && searchText.isEmpty ? 0 : filteredItems(section.items).count
-            return total + 39 + CGFloat(visibleItems) * 33
+            let emptyHintHeight = visibleItems == 0 && !(section.collapsed && searchText.isEmpty) ? CGFloat(30) : 0
+            return total + 39 + CGFloat(visibleItems) * 33 + emptyHintHeight
         }
         let addSectionHeight = CGFloat(filteredSections.isEmpty ? 34 : 42)
         let historyRows = CGFloat(filteredHistory.count)
         let historyToggleHeight = shouldShowHistoryToggle ? CGFloat(26) : 0
-        let historyHeight = 31 + historyRows * 33 + historyToggleHeight
+        let historyHeight = store.state.settings.historyCollapsed ? CGFloat(21) : 31 + historyRows * 33 + historyToggleHeight
         let chromeHeight = CGFloat(112)
         let dividers = CGFloat(visibleDividerCount) * 21
 
@@ -222,9 +224,13 @@ struct MenuBarContentView: View {
                     renameRow(section)
                 }
 
-                ForEach(filteredItems(section.items)) { item in
+                let items = filteredItems(section.items)
+                if items.isEmpty {
+                    emptySectionHint
+                }
+
+                ForEach(items) { item in
                     ClipboardRow(
-                        icon: "text.quote",
                         value: item.value,
                         isFavorite: store.isFavorite(item.value),
                         copy: copy,
@@ -251,7 +257,11 @@ struct MenuBarContentView: View {
     }
 
     private var historySection: some View {
-        SectionBlock(title: "History", collapsed: false, onToggle: nil) {
+        SectionBlock(
+            title: "History",
+            collapsed: store.state.settings.historyCollapsed,
+            onToggle: { store.toggleHistoryCollapsed() }
+        ) {
             if filteredHistory.isEmpty {
                 HStack(spacing: 12) {
                     Image(systemName: "doc.on.clipboard")
@@ -287,6 +297,16 @@ struct MenuBarContentView: View {
                 }
             }
         }
+    }
+
+    private var emptySectionHint: some View {
+        Text("Drag items here to add them to this section.")
+            .font(.system(size: 12, weight: .regular))
+            .foregroundStyle(AppTheme.muted)
+            .lineLimit(2)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, minHeight: 30, alignment: .leading)
+            .padding(.leading, 2)
     }
 
     private func renameRow(_ section: ClipboardSection) -> some View {
@@ -389,13 +409,15 @@ struct MenuBarContentView: View {
                         .bold()
                         .foregroundStyle(AppTheme.muted)
 
-                    HStack(spacing: 11) {
-                        Image(systemName: "moon")
-                            .font(.callout)
-                            .frame(width: 20)
-                        Text("Dark")
+                    Picker("Theme", selection: appearanceBinding) {
+                        ForEach(AppAppearance.allCases) { appearance in
+                            Label(appearance.title, systemImage: appearance.icon)
+                                .tag(appearance)
+                        }
                     }
-                    .foregroundStyle(AppTheme.primary)
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .frame(maxWidth: .infinity)
                 }
             }
             .padding(.horizontal, 34)
@@ -433,6 +455,13 @@ struct MenuBarContentView: View {
 
     private var shouldShowHistoryToggle: Bool {
         filteredItems(store.state.history).count > 5
+    }
+
+    private var appearanceBinding: Binding<AppAppearance> {
+        Binding(
+            get: { store.state.settings.appearance },
+            set: { store.setAppearance($0) }
+        )
     }
 
     private func filteredItems(_ items: [ClipboardItem]) -> [ClipboardItem] {
