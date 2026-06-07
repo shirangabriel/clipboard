@@ -9,7 +9,9 @@ struct MenuBarContentView: View {
     @State private var searchText = ""
     @State private var newSectionName = ""
     @State private var sectionBeingRenamed: UUID?
+    @State private var favoriteBeingRenamed: UUID?
     @State private var renameText = ""
+    @State private var favoriteRenameText = ""
     @State private var showingSettings = false
     @State private var showingAllHistory = false
     @FocusState private var searchFocused: Bool
@@ -167,11 +169,19 @@ struct MenuBarContentView: View {
     private var favoritesSection: some View {
         SectionBlock(title: "Favorites", collapsed: false, onToggle: nil) {
             ForEach(filteredFavorites) { favorite in
-                FavoriteRow(
-                    favorite: favorite,
-                    copy: copy,
-                    delete: { store.deleteFavorite(favorite.id) }
-                )
+                if favoriteBeingRenamed == favorite.id {
+                    favoriteRenameRow(favorite)
+                } else {
+                    FavoriteRow(
+                        favorite: favorite,
+                        copy: copy,
+                        remove: { store.deleteFavorite(favorite.id) },
+                        rename: {
+                            favoriteBeingRenamed = favorite.id
+                            favoriteRenameText = favorite.displayName
+                        }
+                    )
+                }
             }
         }
     }
@@ -207,9 +217,10 @@ struct MenuBarContentView: View {
                     ClipboardRow(
                         icon: "text.quote",
                         value: item.value,
+                        isFavorite: store.isFavorite(item.value),
                         copy: copy,
                         delete: { store.deleteSectionItem(item.id, in: section.id) },
-                        favorite: { store.favorite(item.value) }
+                        toggleFavorite: { store.toggleFavorite(item.value) }
                     )
                     .draggable(ClipboardDragPayload(itemID: item.id, source: .section, sectionID: section.id))
                 }
@@ -247,9 +258,10 @@ struct MenuBarContentView: View {
                 ForEach(filteredHistory) { item in
                     ClipboardRow(
                         value: item.value,
+                        isFavorite: store.isFavorite(item.value),
                         copy: copy,
                         delete: { store.deleteHistoryItem(item.id) },
-                        favorite: { store.favorite(item.value) }
+                        toggleFavorite: { store.toggleFavorite(item.value) }
                     )
                     .draggable(ClipboardDragPayload(itemID: item.id, source: .history, sectionID: nil))
                 }
@@ -289,6 +301,30 @@ struct MenuBarContentView: View {
             .foregroundStyle(AppTheme.accent)
         }
         .frame(height: 30)
+    }
+
+    private func favoriteRenameRow(_ favorite: FavoriteItem) -> some View {
+        HStack(spacing: 11) {
+            Image(systemName: "pencil")
+                .font(.system(size: 13, weight: .regular))
+                .foregroundStyle(AppTheme.primary)
+                .frame(width: 20)
+
+            TextField("Favorite name", text: $favoriteRenameText)
+                .textFieldStyle(.plain)
+                .foregroundStyle(AppTheme.primary)
+                .onSubmit {
+                    finishFavoriteRename(favorite.id)
+                }
+
+            Button("Done") {
+                finishFavoriteRename(favorite.id)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(AppTheme.accent)
+        }
+        .frame(height: 30)
+        .help(favorite.value)
     }
 
     private func sectionDividerIfNeeded(_ visible: Bool) -> some View {
@@ -361,7 +397,7 @@ struct MenuBarContentView: View {
     }
 
     private var filteredFavorites: [FavoriteItem] {
-        store.state.favorites.filter { matches($0.value) }
+        store.state.favorites.filter { matches($0.value) || matches($0.displayName) }
     }
 
     private var filteredSections: [ClipboardSection] {
@@ -406,5 +442,10 @@ struct MenuBarContentView: View {
     private func finishRename(_ sectionID: UUID) {
         store.renameSection(sectionID, to: renameText)
         sectionBeingRenamed = nil
+    }
+
+    private func finishFavoriteRename(_ favoriteID: UUID) {
+        store.renameFavorite(favoriteID, to: favoriteRenameText)
+        favoriteBeingRenamed = nil
     }
 }

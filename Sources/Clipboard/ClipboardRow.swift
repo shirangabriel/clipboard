@@ -3,30 +3,34 @@ import SwiftUI
 struct ClipboardRow: View {
     let icon: String?
     let value: String
+    let isFavorite: Bool
     let copy: (String) -> Void
     let delete: () -> Void
-    let favorite: () -> Void
+    let toggleFavorite: () -> Void
 
     init(
         icon: String? = nil,
         value: String,
+        isFavorite: Bool,
         copy: @escaping (String) -> Void,
         delete: @escaping () -> Void,
-        favorite: @escaping () -> Void
+        toggleFavorite: @escaping () -> Void
     ) {
         self.icon = icon
         self.value = value
+        self.isFavorite = isFavorite
         self.copy = copy
         self.delete = delete
-        self.favorite = favorite
+        self.toggleFavorite = toggleFavorite
     }
 
     @State private var isHovering = false
+    @State private var isCopied = false
 
     var body: some View {
         HStack(spacing: 8) {
             Button {
-                copy(value)
+                copyValue()
             } label: {
                 rowLabel
             }
@@ -34,12 +38,22 @@ struct ClipboardRow: View {
             .help(value)
             .frame(maxWidth: .infinity)
             .contextMenu {
-                Button("Copy", action: { copy(value) })
-                Button("Add to Favorites", systemImage: "star", action: favorite)
+                Button("Copy", action: copyValue)
+                Button(favoriteActionLabel, systemImage: favoriteIcon, action: toggleFavorite)
                 Button("Delete", systemImage: "trash", role: .destructive, action: delete)
             }
 
-            IconButton(systemName: "star", label: "Add to Favorites", action: favorite)
+            if isCopied {
+                Label("Copied", systemImage: "checkmark")
+                    .labelStyle(.iconOnly)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(AppTheme.accent)
+                    .frame(width: 28, height: 28)
+                    .transition(.opacity)
+                    .accessibilityLabel("Copied")
+            }
+
+            IconButton(systemName: favoriteIcon, label: favoriteActionLabel, action: toggleFavorite)
             IconButton(systemName: "trash", label: "Delete", action: delete)
         }
         .frame(height: 30)
@@ -68,5 +82,26 @@ struct ClipboardRow: View {
             Spacer(minLength: 8)
         }
         .contentShape(Rectangle())
+    }
+
+    private var favoriteIcon: String {
+        isFavorite ? "star.fill" : "star"
+    }
+
+    private var favoriteActionLabel: String {
+        isFavorite ? "Remove Favorite" : "Add to Favorites"
+    }
+
+    private func copyValue() {
+        copy(value)
+        withAnimation(.easeOut(duration: 0.12)) {
+            isCopied = true
+        }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(900))
+            withAnimation(.easeOut(duration: 0.2)) {
+                isCopied = false
+            }
+        }
     }
 }

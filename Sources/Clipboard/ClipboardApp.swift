@@ -52,7 +52,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 store: store,
                 stateFilePath: store.stateURL.path,
                 copy: { [weak self] value in
-                    self?.copyAndClose(value)
+                    self?.copyValue(value)
                 },
                 onHeightChange: { [weak self] height in
                     self?.popover.contentSize = NSSize(width: 330, height: height)
@@ -75,9 +75,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    private func copyAndClose(_ value: String) {
+    private func copyValue(_ value: String) {
         pasteboard.copy(value)
-        popover.performClose(nil)
     }
 
     private func handleHotKey(_ action: HotKeyService.HotKeyAction) {

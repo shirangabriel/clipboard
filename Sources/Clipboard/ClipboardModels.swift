@@ -29,7 +29,13 @@ struct FavoriteItem: Codable, Identifiable, Equatable, Hashable {
     var id: UUID = UUID()
     var slot: Int
     var value: String
+    var name: String?
     var createdAt: Date = Date()
+
+    var displayName: String {
+        guard let name, !name.isEmpty else { return value }
+        return name
+    }
 }
 
 extension String {

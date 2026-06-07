@@ -3,26 +3,40 @@ import SwiftUI
 struct FavoriteRow: View {
     let favorite: FavoriteItem
     let copy: (String) -> Void
-    let delete: () -> Void
+    let remove: () -> Void
+    let rename: () -> Void
 
     @State private var isHovering = false
+    @State private var isCopied = false
 
     var body: some View {
         HStack(spacing: 8) {
             Button {
-                copy(favorite.value)
+                copyValue()
             } label: {
                 rowLabel
             }
             .buttonStyle(.plain)
             .help(favorite.value)
+            .accessibilityLabel("Copy favorite \(favorite.slot), shortcut Control Option Command \(favorite.slot)")
             .frame(maxWidth: .infinity)
             .contextMenu {
-                Button("Copy", action: { copy(favorite.value) })
-                Button("Remove Favorite", systemImage: "trash", role: .destructive, action: delete)
+                Button("Copy", action: copyValue)
+                Button("Rename", systemImage: "pencil", action: rename)
+                Button("Remove Favorite", systemImage: "star.fill", role: .destructive, action: remove)
             }
 
-            IconButton(systemName: "trash", label: "Remove Favorite", action: delete)
+            if isCopied {
+                Label("Copied", systemImage: "checkmark")
+                    .labelStyle(.iconOnly)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(AppTheme.accent)
+                    .frame(width: 28, height: 28)
+                    .transition(.opacity)
+                    .accessibilityLabel("Copied")
+            }
+
+            IconButton(systemName: "star.fill", label: "Remove Favorite", action: remove)
         }
         .frame(height: 30)
         .padding(.horizontal, 2)
@@ -44,7 +58,7 @@ struct FavoriteRow: View {
                 }
                 .accessibilityLabel("Favorite \(favorite.slot)")
 
-            Text(favorite.value.menuPreview)
+            Text(favorite.displayName.menuPreview)
                 .font(.system(size: 13, weight: .regular))
                 .foregroundStyle(AppTheme.primary)
                 .lineLimit(1)
@@ -53,5 +67,18 @@ struct FavoriteRow: View {
             Spacer(minLength: 8)
         }
         .contentShape(Rectangle())
+    }
+
+    private func copyValue() {
+        copy(favorite.value)
+        withAnimation(.easeOut(duration: 0.12)) {
+            isCopied = true
+        }
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(900))
+            withAnimation(.easeOut(duration: 0.2)) {
+                isCopied = false
+            }
+        }
     }
 }

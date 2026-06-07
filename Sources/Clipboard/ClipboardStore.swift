@@ -105,6 +105,26 @@ final class ClipboardStore {
         save()
     }
 
+    func toggleFavorite(_ value: String) {
+        if let favorite = state.favorites.first(where: { $0.value == value }) {
+            deleteFavorite(favorite.id)
+        } else {
+            favorite(value)
+        }
+    }
+
+    func isFavorite(_ value: String) -> Bool {
+        state.favorites.contains { $0.value == value }
+    }
+
+    func renameFavorite(_ favoriteID: UUID, to name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let index = state.favorites.firstIndex(where: { $0.id == favoriteID }) else { return }
+
+        state.favorites[index].name = trimmed.isEmpty ? nil : trimmed
+        save()
+    }
+
     func deleteFavorite(_ favoriteID: UUID) {
         state.favorites.removeAll { $0.id == favoriteID }
         save()
