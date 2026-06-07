@@ -2,6 +2,7 @@
 set -euo pipefail
 
 MODE="${1:-run}"
+VERSION="${2:-${VERSION:-0.1.0}}"
 APP_NAME="Clipboard"
 BUNDLE_ID="com.gabe.Clipboard"
 MIN_SYSTEM_VERSION="14.0"
@@ -13,19 +14,15 @@ APP_CONTENTS="$APP_BUNDLE/Contents"
 APP_MACOS="$APP_CONTENTS/MacOS"
 APP_BINARY="$APP_MACOS/$APP_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
+ZIP_PATH="$DIST_DIR/$APP_NAME-$VERSION-macos.zip"
 
-pkill -x "$APP_NAME" >/dev/null 2>&1 || true
-pkill -f ".build.*$APP_NAME" >/dev/null 2>&1 || true
+stop_running_app() {
+  pkill -x "$APP_NAME" >/dev/null 2>&1 || true
+  pkill -f ".build.*$APP_NAME" >/dev/null 2>&1 || true
+}
 
-swift build
-BUILD_BINARY="$(swift build --show-bin-path)/$APP_NAME"
-
-rm -rf "$APP_BUNDLE"
-mkdir -p "$APP_MACOS"
-cp "$BUILD_BINARY" "$APP_BINARY"
-chmod +x "$APP_BINARY"
-
-cat >"$INFO_PLIST" <<PLIST
+write_info_plist() {
+  cat >"$INFO_PLIST" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -45,33 +42,75 @@ cat >"$INFO_PLIST" <<PLIST
 </dict>
 </plist>
 PLIST
+}
+
+build_app_bundle() {
+  local configuration="${1:-debug}"
+  local build_binary
+
+  if [[ "$configuration" == "release" ]]; then
+    swift build -c release
+    build_binary="$(swift build -c release --show-bin-path)/$APP_NAME"
+  else
+    swift build
+    build_binary="$(swift build --show-bin-path)/$APP_NAME"
+  fi
+
+  rm -rf "$APP_BUNDLE"
+  mkdir -p "$APP_MACOS"
+  cp "$build_binary" "$APP_BINARY"
+  chmod +x "$APP_BINARY"
+  write_info_plist
+}
 
 open_app() {
   /usr/bin/open -n "$APP_BUNDLE"
 }
 
+package_app() {
+  build_app_bundle release
+  rm -f "$ZIP_PATH"
+  xattr -cr "$APP_BUNDLE"
+  COPYFILE_DISABLE=1 ditto -c -k --norsrc --keepParent "$APP_BUNDLE" "$ZIP_PATH"
+  shasum -a 256 "$ZIP_PATH"
+}
+
 case "$MODE" in
   run)
+    stop_running_app
+    build_app_bundle debug
     open_app
     ;;
   --debug|debug)
+    stop_running_app
+    build_app_bundle debug
     lldb -- "$APP_BINARY"
     ;;
   --logs|logs)
+    stop_running_app
+    build_app_bundle debug
     open_app
     /usr/bin/log stream --info --style compact --predicate "process == \"$APP_NAME\""
     ;;
   --telemetry|telemetry)
+    stop_running_app
+    build_app_bundle debug
     open_app
     /usr/bin/log stream --info --style compact --predicate "subsystem == \"$BUNDLE_ID\""
     ;;
   --verify|verify)
+    stop_running_app
+    build_app_bundle debug
     open_app
     sleep 1
     pgrep -x "$APP_NAME" >/dev/null
+    stop_running_app
+    ;;
+  --package|package)
+    package_app
     ;;
   *)
-    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify]" >&2
+    echo "usage: $0 [run|--debug|--logs|--telemetry|--verify|--package [version]]" >&2
     exit 2
     ;;
 esac
