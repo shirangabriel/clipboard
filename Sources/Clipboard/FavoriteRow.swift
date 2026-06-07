@@ -24,20 +24,20 @@ struct FavoriteRow: View {
 
             IconButton(systemName: "trash", label: "Remove Favorite", action: delete)
         }
-        .frame(height: 31)
-        .padding(.horizontal, 4)
+        .frame(height: 30)
+        .padding(.horizontal, 2)
         .background(isHovering ? AppTheme.hover : Color.clear)
-        .clipShape(.rect(cornerRadius: 8))
+        .clipShape(.rect(cornerRadius: 6))
         .onHover { isHovering = $0 }
     }
 
     private var rowLabel: some View {
-        HStack(spacing: 11) {
+        HStack(spacing: 12) {
             Text("\(favorite.slot)")
                 .font(.caption)
                 .bold()
                 .foregroundStyle(AppTheme.primary)
-                .frame(width: 22, height: 22)
+                .frame(width: 20, height: 20)
                 .overlay {
                     RoundedRectangle(cornerRadius: 6)
                         .stroke(AppTheme.primary, lineWidth: 1.5)
@@ -45,7 +45,7 @@ struct FavoriteRow: View {
                 .accessibilityLabel("Favorite \(favorite.slot)")
 
             Text(favorite.value.menuPreview)
-                .font(.callout)
+                .font(.system(size: 13, weight: .regular))
                 .foregroundStyle(AppTheme.primary)
                 .lineLimit(1)
                 .truncationMode(.tail)

@@ -1,11 +1,25 @@
 import SwiftUI
 
 struct ClipboardRow: View {
-    let icon: String
+    let icon: String?
     let value: String
     let copy: (String) -> Void
     let delete: () -> Void
     let favorite: () -> Void
+
+    init(
+        icon: String? = nil,
+        value: String,
+        copy: @escaping (String) -> Void,
+        delete: @escaping () -> Void,
+        favorite: @escaping () -> Void
+    ) {
+        self.icon = icon
+        self.value = value
+        self.copy = copy
+        self.delete = delete
+        self.favorite = favorite
+    }
 
     @State private var isHovering = false
 
@@ -28,23 +42,25 @@ struct ClipboardRow: View {
             IconButton(systemName: "star", label: "Add to Favorites", action: favorite)
             IconButton(systemName: "trash", label: "Delete", action: delete)
         }
-        .frame(height: 31)
-        .padding(.horizontal, 4)
+        .frame(height: 30)
+        .padding(.horizontal, 2)
         .background(isHovering ? AppTheme.hover : Color.clear)
-        .clipShape(.rect(cornerRadius: 8))
+        .clipShape(.rect(cornerRadius: 6))
         .onHover { isHovering = $0 }
     }
 
     private var rowLabel: some View {
-        HStack(spacing: 11) {
-            Image(systemName: icon)
-                .font(.callout)
-                .foregroundStyle(AppTheme.primary)
-                .frame(width: 20)
-                .accessibilityHidden(true)
+        HStack(spacing: 12) {
+            if let icon {
+                Image(systemName: icon)
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundStyle(AppTheme.secondary)
+                    .frame(width: 20)
+                    .accessibilityHidden(true)
+            }
 
             Text(value.menuPreview)
-                .font(.callout)
+                .font(.system(size: 13, weight: .regular))
                 .foregroundStyle(AppTheme.primary)
                 .lineLimit(1)
                 .truncationMode(.tail)

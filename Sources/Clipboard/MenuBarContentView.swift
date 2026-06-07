@@ -22,9 +22,8 @@ struct MenuBarContentView: View {
                 .fill(AppTheme.surface)
                 .overlay {
                     RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                        .stroke(Color.white.opacity(0.14), lineWidth: 1)
                 }
-                .padding(8)
 
             if showingSettings {
                 settingsView
@@ -33,7 +32,7 @@ struct MenuBarContentView: View {
             }
         }
         .frame(width: 330, height: preferredHeight)
-        .font(.callout)
+        .font(.system(size: 13, weight: .regular))
         .foregroundStyle(AppTheme.primary)
         .onAppear {
             searchFocused = true
@@ -57,23 +56,27 @@ struct MenuBarContentView: View {
                         favoritesSection
                     }
 
-                    ForEach(filteredSections) { section in
-                        sectionDividerIfNeeded(true)
-                        userSection(section)
-                    }
+                    if filteredSections.isEmpty {
+                        sectionDividerIfNeeded(!filteredFavorites.isEmpty)
+                        addSectionBar
+                    } else {
+                        ForEach(filteredSections) { section in
+                            sectionDividerIfNeeded(true)
+                            userSection(section)
+                        }
 
-                    sectionDividerIfNeeded(!filteredFavorites.isEmpty || !filteredSections.isEmpty)
-                    addSectionBar
+                        addSectionBar
+                            .padding(.top, 8)
+                    }
 
                     sectionDividerIfNeeded(true)
                     historySection
                 }
-                .padding(.horizontal, 22)
-                .padding(.bottom, 26)
+                .padding(.horizontal, 26)
+                .padding(.bottom, 24)
             }
         }
-        .padding(.top, 22)
-        .padding(.horizontal, 10)
+        .padding(.top, 24)
     }
 
     private var preferredHeight: CGFloat {
@@ -81,24 +84,24 @@ struct MenuBarContentView: View {
     }
 
     private var estimatedContentHeight: CGFloat {
-        let favoritesHeight = filteredFavorites.isEmpty ? 0 : 34 + CGFloat(filteredFavorites.count) * 37
+        let favoritesHeight = filteredFavorites.isEmpty ? 0 : 31 + CGFloat(filteredFavorites.count) * 33
         let sectionsHeight = filteredSections.reduce(CGFloat(0)) { total, section in
             let visibleItems = section.collapsed && searchText.isEmpty ? 0 : filteredItems(section.items).count
-            return total + 46 + CGFloat(visibleItems) * 37
+            return total + 39 + CGFloat(visibleItems) * 33
         }
-        let addSectionHeight = CGFloat(45)
+        let addSectionHeight = CGFloat(filteredSections.isEmpty ? 34 : 42)
         let historyRows = CGFloat(filteredHistory.count)
         let historyToggleHeight = shouldShowHistoryToggle ? CGFloat(26) : 0
-        let historyHeight = 34 + historyRows * 37 + historyToggleHeight
-        let chromeHeight = CGFloat(118)
-        let dividers = CGFloat(visibleDividerCount) * 25
+        let historyHeight = 31 + historyRows * 33 + historyToggleHeight
+        let chromeHeight = CGFloat(112)
+        let dividers = CGFloat(visibleDividerCount) * 21
 
         return chromeHeight + favoritesHeight + sectionsHeight + addSectionHeight + historyHeight + dividers
     }
 
     private var visibleDividerCount: Int {
         var count = filteredSections.count
-        if !filteredFavorites.isEmpty || !filteredSections.isEmpty {
+        if filteredSections.isEmpty && !filteredFavorites.isEmpty {
             count += 1
         }
         count += 1
@@ -108,7 +111,7 @@ struct MenuBarContentView: View {
     private var header: some View {
         HStack(alignment: .center) {
             Text("Clipboard")
-                .font(.headline)
+                .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(AppTheme.secondary)
 
             Spacer()
@@ -121,14 +124,14 @@ struct MenuBarContentView: View {
             .foregroundStyle(AppTheme.secondary)
             .help("Settings")
         }
-        .padding(.horizontal, 22)
-        .padding(.bottom, 14)
+        .padding(.horizontal, 26)
+        .padding(.bottom, 12)
     }
 
     private var searchField: some View {
-        HStack(spacing: 11) {
+        HStack(spacing: 12) {
             Image(systemName: "magnifyingglass")
-                .font(.callout)
+                .font(.system(size: 13, weight: .regular))
                 .foregroundStyle(AppTheme.secondary)
                 .frame(width: 20)
 
@@ -141,9 +144,9 @@ struct MenuBarContentView: View {
     }
 
     private var addSectionBar: some View {
-        HStack(spacing: 11) {
+        HStack(spacing: 12) {
             Image(systemName: "plus.square")
-                .font(.callout)
+                .font(.system(size: 13, weight: .regular))
                 .foregroundStyle(AppTheme.primary)
                 .frame(width: 20)
 
@@ -154,11 +157,11 @@ struct MenuBarContentView: View {
 
             Button("Add Section", systemImage: "plus", action: createSection)
                 .labelStyle(.iconOnly)
-            .buttonStyle(.plain)
-            .foregroundStyle(AppTheme.secondary)
-            .help("Add Section")
+                .buttonStyle(.plain)
+                .foregroundStyle(AppTheme.secondary)
+                .help("Add Section")
         }
-        .frame(height: 31)
+        .frame(height: 30)
     }
 
     private var favoritesSection: some View {
@@ -192,6 +195,7 @@ struct MenuBarContentView: View {
                 }
                 .labelStyle(.iconOnly)
                 .menuStyle(.borderlessButton)
+                .menuIndicator(.hidden)
                 .foregroundStyle(AppTheme.secondary)
             },
             content: {
@@ -229,18 +233,19 @@ struct MenuBarContentView: View {
     private var historySection: some View {
         SectionBlock(title: "History", collapsed: false, onToggle: nil) {
             if filteredHistory.isEmpty {
-                HStack(spacing: 11) {
+                HStack(spacing: 12) {
                     Image(systemName: "doc.on.clipboard")
-                        .font(.callout)
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundStyle(AppTheme.secondary)
                         .frame(width: 20)
                     Text("No copied text yet")
+                        .font(.system(size: 13, weight: .regular))
                         .foregroundStyle(AppTheme.muted)
                 }
-                .frame(height: 31)
+                .frame(height: 30)
             } else {
                 ForEach(filteredHistory) { item in
                     ClipboardRow(
-                        icon: "doc.on.clipboard",
                         value: item.value,
                         copy: copy,
                         delete: { store.deleteHistoryItem(item.id) },
@@ -254,6 +259,7 @@ struct MenuBarContentView: View {
                         showingAllHistory.toggle()
                     }
                     .buttonStyle(.plain)
+                    .font(.system(size: 12, weight: .regular))
                     .foregroundStyle(AppTheme.accent)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.top, 4)
@@ -265,7 +271,7 @@ struct MenuBarContentView: View {
     private func renameRow(_ section: ClipboardSection) -> some View {
         HStack(spacing: 11) {
             Image(systemName: "pencil")
-                .font(.callout)
+                .font(.system(size: 13, weight: .regular))
                 .foregroundStyle(AppTheme.primary)
                 .frame(width: 20)
 
@@ -282,7 +288,7 @@ struct MenuBarContentView: View {
             .buttonStyle(.plain)
             .foregroundStyle(AppTheme.accent)
         }
-        .frame(height: 31)
+        .frame(height: 30)
     }
 
     private func sectionDividerIfNeeded(_ visible: Bool) -> some View {
@@ -291,7 +297,7 @@ struct MenuBarContentView: View {
                 Rectangle()
                     .fill(AppTheme.divider)
                     .frame(height: 1)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 10)
             }
         }
     }

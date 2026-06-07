@@ -38,7 +38,7 @@ struct SectionBlock<Content: View, TrailingMenu: View>: View {
             }
 
             if !collapsed {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 3) {
                     content
                 }
             }
@@ -48,17 +48,17 @@ struct SectionBlock<Content: View, TrailingMenu: View>: View {
     private var headerContent: some View {
         HStack(spacing: 8) {
             Text(title)
-                .font(.headline)
+                .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(AppTheme.secondary)
                 .lineLimit(1)
 
             if onToggle != nil {
                 Image(systemName: collapsed ? "chevron.right" : "chevron.down")
-                    .font(.caption)
-                    .bold()
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(AppTheme.secondary)
             }
         }
+        .frame(height: 21)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
     }
