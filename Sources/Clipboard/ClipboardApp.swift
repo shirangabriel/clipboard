@@ -79,6 +79,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func copyValue(_ value: String) {
         pasteboard.copy(value)
         showCopiedStatus()
+        popover.performClose(nil)
     }
 
     private func showCopiedStatus() {
