@@ -11,6 +11,7 @@ A macOS menu bar clipboard utility for text history, user sections, and speed-di
 - Copies a selected item back to the pasteboard and briefly shows `Copied!` in the menu bar.
 - Opens from the keyboard with `Command+Shift+V`.
 - Copies favorite slots directly with `Control+Option+Command+1...9`.
+- Checks for app updates automatically using Sparkle.
 
 ## Requirements
 
@@ -103,7 +104,13 @@ script/build_and_run.sh --verify
 Create a release zip and print its SHA-256 checksum:
 
 ```sh
-script/build_and_run.sh --package 0.1.1
+script/build_and_run.sh --package 0.1.2
+```
+
+Create a release zip and signed Sparkle appcast:
+
+```sh
+script/build_and_run.sh --appcast 0.1.2
 ```
 
 Release artifacts are written to `dist/`, which is ignored by git.

@@ -7,7 +7,17 @@ struct ClipboardApp: App {
 
     var body: some Scene {
         Settings {
-            ClipboardSettingsView(store: ClipboardEnvironment.store)
+            ClipboardSettingsView(
+                store: ClipboardEnvironment.store,
+                updater: ClipboardEnvironment.updater
+            )
+        }
+        .commands {
+            CommandGroup(after: .appInfo) {
+                Button("Check for Updates...") {
+                    ClipboardEnvironment.updater.checkForUpdates()
+                }
+            }
         }
     }
 }
@@ -15,6 +25,7 @@ struct ClipboardApp: App {
 @MainActor
 enum ClipboardEnvironment {
     static let store = ClipboardStore()
+    static let updater = AppUpdater()
 }
 
 @MainActor

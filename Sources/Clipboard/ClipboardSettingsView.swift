@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ClipboardSettingsView: View {
     let store: ClipboardStore
+    let updater: AppUpdater
 
     var body: some View {
         Form {
@@ -20,6 +21,14 @@ struct ClipboardSettingsView: View {
                 }
                 .pickerStyle(.segmented)
             }
+
+            Section("Updates") {
+                Toggle("Automatically check for updates", isOn: automaticUpdateChecksBinding)
+
+                Button("Check Now") {
+                    updater.checkForUpdates()
+                }
+            }
         }
         .formStyle(.grouped)
         .padding(20)
@@ -31,6 +40,13 @@ struct ClipboardSettingsView: View {
         Binding(
             get: { store.state.settings.appearance },
             set: { store.setAppearance($0) }
+        )
+    }
+
+    private var automaticUpdateChecksBinding: Binding<Bool> {
+        Binding(
+            get: { updater.automaticallyChecksForUpdates },
+            set: { updater.automaticallyChecksForUpdates = $0 }
         )
     }
 }
