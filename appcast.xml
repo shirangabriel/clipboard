@@ -1,0 +1,16 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>Clipboard</title>
+        <item>
+            <title>0.1.2</title>
+            <pubDate>Wed, 24 Jun 2026 23:56:52 +0530</pubDate>
+            <link>https://github.com/shirangabriel/clipboard/releases/tag/v0.1.2</link>
+            <sparkle:version>0.1.2</sparkle:version>
+            <sparkle:shortVersionString>0.1.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <enclosure url="https://github.com/shirangabriel/clipboard/releases/download/v0.1.2/Clipboard-0.1.2-macos.zip" length="1280949" type="application/octet-stream" sparkle:edSignature="jXWSZcNarAMyelAPGEJVSvEiRa8PnbNhp4H7eVkojf3DTQZQEmk0U6xYQUQFsrjP6CoCy8UbdGivt2Z1OOzfBg=="/>
+        </item>
+    </channel>
+</rss>
