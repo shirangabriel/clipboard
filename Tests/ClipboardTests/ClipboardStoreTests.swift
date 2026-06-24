@@ -63,6 +63,24 @@ struct ClipboardStoreTests {
     }
 
     @Test
+    func editingHistoryItemToExistingFavoriteValueDoesNotDuplicateFavorites() throws {
+        let harness = try StoreHarness()
+        let item = ClipboardItem(value: "Old favorite")
+        var state = ClipboardState(history: [item])
+        state.favorites = [
+            FavoriteItem(slot: 1, value: "Old favorite", name: "Old"),
+            FavoriteItem(slot: 2, value: "Existing favorite", name: "Existing")
+        ]
+        let store = ClipboardStore(stateURL: harness.stateURL, backupURL: harness.backupURL, initialState: state)
+
+        store.editHistoryItem(item.id, to: "Existing favorite")
+
+        #expect(store.state.history.first?.value == "Existing favorite")
+        #expect(store.state.favorites.map(\.value) == ["Existing favorite"])
+        #expect(store.state.favorites.first?.name == "Existing")
+    }
+
+    @Test
     func sectionItemsCanBeRenamedAndEdited() throws {
         let harness = try StoreHarness()
         let item = ClipboardItem(value: "Original")
@@ -81,6 +99,25 @@ struct ClipboardStoreTests {
 
         store.renameSectionItem(item.id, in: section.id, to: " ")
         #expect(store.state.sections.first?.items.first?.name == nil)
+    }
+
+    @Test
+    func editingSectionItemToExistingFavoriteValueDoesNotDuplicateFavorites() throws {
+        let harness = try StoreHarness()
+        let item = ClipboardItem(value: "Old favorite")
+        let section = ClipboardSection(name: "Work", items: [item])
+        var state = ClipboardState(sections: [section])
+        state.favorites = [
+            FavoriteItem(slot: 1, value: "Old favorite", name: "Old"),
+            FavoriteItem(slot: 2, value: "Existing favorite", name: "Existing")
+        ]
+        let store = ClipboardStore(stateURL: harness.stateURL, backupURL: harness.backupURL, initialState: state)
+
+        store.editSectionItem(item.id, in: section.id, to: "Existing favorite")
+
+        #expect(store.state.sections.first?.items.first?.value == "Existing favorite")
+        #expect(store.state.favorites.map(\.value) == ["Existing favorite"])
+        #expect(store.state.favorites.first?.name == "Existing")
     }
 
     @Test

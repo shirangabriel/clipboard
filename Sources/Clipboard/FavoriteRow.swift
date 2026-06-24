@@ -17,7 +17,7 @@ struct FavoriteRow: View {
             }
             .buttonStyle(.plain)
             .help(favorite.value)
-            .accessibilityLabel("Copy favorite \(favorite.slot), shortcut Control Option Command \(favorite.slot)")
+            .accessibilityLabel(accessibilityLabel)
             .frame(maxWidth: .infinity)
             .contextMenu {
                 Button("Copy", action: { copy(favorite.value) })
@@ -80,5 +80,13 @@ struct FavoriteRow: View {
         }
 
         return name != favorite.value
+    }
+
+    private var accessibilityLabel: String {
+        if showsValueSubtitle {
+            return "Copy favorite \(favorite.slot), \(favorite.displayName), value \(favorite.value), shortcut Control Option Command \(favorite.slot)"
+        }
+
+        return "Copy favorite \(favorite.slot), \(favorite.displayName), shortcut Control Option Command \(favorite.slot)"
     }
 }

@@ -112,9 +112,10 @@ struct ClipboardRow: View {
                 .frame(width: 20)
                 .accessibilityHidden(true)
 
-            TextField(mode.placeholder, text: $draftText)
+            TextField(mode.placeholder, text: $draftText, axis: mode.textFieldAxis)
                 .textFieldStyle(.plain)
                 .foregroundStyle(AppTheme.primary)
+                .lineLimit(mode.lineLimit)
                 .onSubmit(finishInlineEdit)
 
             Button("Done", action: finishInlineEdit)
@@ -157,7 +158,11 @@ struct ClipboardRow: View {
     }
 
     private var rowHeight: CGFloat {
-        editMode == nil && showsValueSubtitle ? 46 : 30
+        if editMode == .value {
+            return 78
+        }
+
+        return editMode == nil && showsValueSubtitle ? 46 : 30
     }
 
     private var showsValueSubtitle: Bool {
@@ -190,6 +195,24 @@ private enum RowEditMode {
             "Item name"
         case .value:
             "Clipboard value"
+        }
+    }
+
+    var textFieldAxis: Axis {
+        switch self {
+        case .rename:
+            .horizontal
+        case .value:
+            .vertical
+        }
+    }
+
+    var lineLimit: ClosedRange<Int> {
+        switch self {
+        case .rename:
+            1...1
+        case .value:
+            1...4
         }
     }
 }

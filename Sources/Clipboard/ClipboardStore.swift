@@ -258,6 +258,13 @@ final class ClipboardStore {
     }
 
     private func updateFavorites(matching oldValue: String, to newValue: String) {
+        guard oldValue != newValue else { return }
+
+        if state.favorites.contains(where: { $0.value == newValue }) {
+            state.favorites.removeAll { $0.value == oldValue }
+            return
+        }
+
         for index in state.favorites.indices where state.favorites[index].value == oldValue {
             state.favorites[index].value = newValue
         }
