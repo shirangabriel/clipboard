@@ -27,7 +27,7 @@ struct FavoriteRow: View {
 
             IconButton(systemName: "star.fill", label: "Remove Favorite", action: remove)
         }
-        .frame(height: 30)
+        .frame(height: rowHeight)
         .padding(.horizontal, 2)
         .background(isHovering ? AppTheme.hover : Color.clear)
         .clipShape(.rect(cornerRadius: 6))
@@ -47,14 +47,38 @@ struct FavoriteRow: View {
                 }
                 .accessibilityLabel("Favorite \(favorite.slot)")
 
-            Text(favorite.displayName.menuPreview)
-                .font(.system(size: 13, weight: .regular))
-                .foregroundStyle(AppTheme.primary)
-                .lineLimit(1)
-                .truncationMode(.tail)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(favorite.displayName.menuPreview)
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundStyle(AppTheme.primary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+
+                if showsValueSubtitle {
+                    Text(favorite.value.menuPreview)
+                        .font(.system(size: 11, weight: .regular))
+                        .foregroundStyle(AppTheme.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+            }
 
             Spacer(minLength: 8)
         }
         .contentShape(Rectangle())
+    }
+
+    private var rowHeight: CGFloat {
+        showsValueSubtitle ? 46 : 30
+    }
+
+    private var showsValueSubtitle: Bool {
+        guard let name = favorite.name?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !name.isEmpty
+        else {
+            return false
+        }
+
+        return name != favorite.value
     }
 }

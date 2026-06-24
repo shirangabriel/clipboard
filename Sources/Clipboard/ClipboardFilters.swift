@@ -27,13 +27,24 @@ struct ClipboardFilters {
             }
         }
 
-        let historyItems = Self.filteredItems(state.history, searchText: searchText)
+        let favoriteValues = Set(state.favorites.map(\.value))
+        let historyItems = Self.filteredItems(
+            state.history.filter { !favoriteValues.contains($0.value) },
+            searchText: searchText
+        ).sorted {
+            if $0.lastUsedAt == $1.lastUsedAt {
+                return $0.createdAt > $1.createdAt
+            }
+            return $0.lastUsedAt > $1.lastUsedAt
+        }
         filteredHistory = showingAllHistory ? historyItems : Array(historyItems.prefix(5))
         shouldShowHistoryToggle = historyItems.count > 5
     }
 
     private static func filteredItems(_ items: [ClipboardItem], searchText: String) -> [ClipboardItem] {
-        items.filter { matches($0.value, searchText: searchText) }
+        items.filter {
+            matches($0.value, searchText: searchText) || matches($0.displayName, searchText: searchText)
+        }
     }
 
     private static func matches(_ value: String, searchText: String) -> Bool {

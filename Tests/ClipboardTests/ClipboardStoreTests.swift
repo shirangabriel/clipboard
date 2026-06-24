@@ -42,6 +42,72 @@ struct ClipboardStoreTests {
     }
 
     @Test
+    func historyItemsCanBeRenamedAndEdited() throws {
+        let harness = try StoreHarness()
+        let item = ClipboardItem(value: "brew reinstall --cask shirangabriel/tap/clipboard")
+        let store = ClipboardStore(
+            stateURL: harness.stateURL,
+            backupURL: harness.backupURL,
+            initialState: ClipboardState(history: [item])
+        )
+
+        store.renameHistoryItem(item.id, to: " Install Clipboard ")
+        #expect(store.state.history.first?.name == "Install Clipboard")
+        #expect(store.state.history.first?.displayName == "Install Clipboard")
+
+        store.editHistoryItem(item.id, to: "brew install clipboard")
+        #expect(store.state.history.first?.value == "brew install clipboard")
+
+        store.renameHistoryItem(item.id, to: " ")
+        #expect(store.state.history.first?.name == nil)
+    }
+
+    @Test
+    func sectionItemsCanBeRenamedAndEdited() throws {
+        let harness = try StoreHarness()
+        let item = ClipboardItem(value: "Original")
+        let section = ClipboardSection(name: "Work", items: [item])
+        let store = ClipboardStore(
+            stateURL: harness.stateURL,
+            backupURL: harness.backupURL,
+            initialState: ClipboardState(sections: [section])
+        )
+
+        store.renameSectionItem(item.id, in: section.id, to: " Label ")
+        #expect(store.state.sections.first?.items.first?.name == "Label")
+
+        store.editSectionItem(item.id, in: section.id, to: "Updated")
+        #expect(store.state.sections.first?.items.first?.value == "Updated")
+
+        store.renameSectionItem(item.id, in: section.id, to: " ")
+        #expect(store.state.sections.first?.items.first?.name == nil)
+    }
+
+    @Test
+    func markingHistoryItemUsedMovesOnlyThatHistoryItemToTop() throws {
+        let harness = try StoreHarness()
+        let first = ClipboardItem(
+            value: "First",
+            createdAt: Date(timeIntervalSince1970: 1),
+            lastUsedAt: Date(timeIntervalSince1970: 1)
+        )
+        let second = ClipboardItem(
+            value: "Second",
+            createdAt: Date(timeIntervalSince1970: 2),
+            lastUsedAt: Date(timeIntervalSince1970: 2)
+        )
+        let store = ClipboardStore(
+            stateURL: harness.stateURL,
+            backupURL: harness.backupURL,
+            initialState: ClipboardState(history: [second, first])
+        )
+
+        store.markHistoryItemUsed(first.id)
+
+        #expect(store.state.history.map(\.value) == ["First", "Second"])
+    }
+
+    @Test
     func loadFallsBackToBackupWhenPrimaryStateIsInvalid() throws {
         let harness = try StoreHarness()
         try Data("not json".utf8).write(to: harness.stateURL)
@@ -155,6 +221,70 @@ struct ClipboardStoreTests {
         #expect(store.state.favorites.count == 9)
         #expect(store.state.favorites.filter { $0.value == "One" }.count == 1)
         #expect(store.state.favorites.map(\.slot) == Array(1...9))
+    }
+
+    @Test
+    func favoritingHistoryItemRemovesItFromHistoryAndPreservesName() throws {
+        let harness = try StoreHarness()
+        let item = ClipboardItem(value: "brew reinstall --cask shirangabriel/tap/clipboard", name: "Install Clipboard")
+        let store = ClipboardStore(
+            stateURL: harness.stateURL,
+            backupURL: harness.backupURL,
+            initialState: ClipboardState(history: [item])
+        )
+
+        store.favoriteHistoryItem(item.id)
+
+        #expect(store.state.history.isEmpty)
+        #expect(store.state.favorites.first?.value == item.value)
+        #expect(store.state.favorites.first?.name == "Install Clipboard")
+    }
+
+    @Test
+    func favoritingHistoryItemKeepsHistoryWhenFavoriteSlotsAreFull() throws {
+        let harness = try StoreHarness()
+        let item = ClipboardItem(value: "Keep me")
+        var state = ClipboardState(history: [item])
+        state.favorites = (1...9).map { FavoriteItem(slot: $0, value: "Favorite \($0)") }
+        let store = ClipboardStore(stateURL: harness.stateURL, backupURL: harness.backupURL, initialState: state)
+
+        store.favoriteHistoryItem(item.id)
+
+        #expect(store.state.history.map(\.value) == ["Keep me"])
+        #expect(store.state.favorites.count == 9)
+    }
+
+    @Test
+    func favoritingSectionItemLeavesItInSection() throws {
+        let harness = try StoreHarness()
+        let item = ClipboardItem(value: "Section value", name: "Section label")
+        let section = ClipboardSection(name: "Work", items: [item])
+        let store = ClipboardStore(
+            stateURL: harness.stateURL,
+            backupURL: harness.backupURL,
+            initialState: ClipboardState(sections: [section])
+        )
+
+        store.favoriteSectionItem(item.id, in: section.id)
+
+        #expect(store.state.sections.first?.items.map(\.value) == ["Section value"])
+        #expect(store.state.favorites.first?.name == "Section label")
+    }
+
+    @Test
+    func deletingFavoriteRestoresItToTopOfHistoryWithoutDuplicate() throws {
+        let harness = try StoreHarness()
+        let existing = ClipboardItem(value: "Pinned", name: "Old")
+        var state = ClipboardState(history: [existing])
+        state.favorites = [FavoriteItem(slot: 1, value: "Pinned", name: "New")]
+        let store = ClipboardStore(stateURL: harness.stateURL, backupURL: harness.backupURL, initialState: state)
+        let favoriteID = try #require(store.state.favorites.first?.id)
+
+        store.deleteFavorite(favoriteID)
+
+        #expect(store.state.favorites.isEmpty)
+        #expect(store.state.history.map(\.value) == ["Pinned"])
+        #expect(store.state.history.first?.name == "New")
     }
 
     @Test

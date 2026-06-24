@@ -9,10 +9,12 @@ struct UserSectionView: View {
     let renameSection: (UUID, String) -> Void
     let deleteSection: (UUID) -> Void
     let deleteItem: (UUID, UUID) -> Void
+    let renameItem: (UUID, UUID, String) -> Void
+    let editItem: (UUID, UUID, String) -> Void
     let moveHistoryItem: (UUID, UUID) -> Void
     let moveSectionItem: (UUID, UUID, UUID) -> Void
     let isFavorite: (String) -> Bool
-    let toggleFavorite: (String) -> Void
+    let favoriteSectionItem: (UUID, UUID) -> Void
 
     var body: some View {
         SectionBlock(
@@ -47,11 +49,13 @@ struct UserSectionView: View {
 
                 ForEach(section.items) { item in
                     ClipboardRow(
-                        value: item.value,
+                        item: item,
                         isFavorite: isFavorite(item.value),
                         copy: copy,
                         delete: { deleteItem(item.id, section.id) },
-                        toggleFavorite: { toggleFavorite(item.value) }
+                        toggleFavorite: { favoriteSectionItem(item.id, section.id) },
+                        rename: { renameItem(item.id, section.id, $0) },
+                        edit: { editItem(item.id, section.id, $0) }
                     )
                     .draggable(ClipboardDragPayload(itemID: item.id, source: .section, sectionID: section.id))
                 }

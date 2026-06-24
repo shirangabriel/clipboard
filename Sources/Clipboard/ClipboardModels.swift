@@ -69,7 +69,45 @@ struct ClipboardSection: Codable, Identifiable, Equatable {
 struct ClipboardItem: Codable, Identifiable, Equatable, Hashable {
     var id: UUID = UUID()
     var value: String
+    var name: String?
     var createdAt: Date = .now
+    var lastUsedAt: Date = .now
+
+    var displayName: String {
+        guard let name, !name.isEmpty else { return value }
+        return name
+    }
+
+    init(
+        id: UUID = UUID(),
+        value: String,
+        name: String? = nil,
+        createdAt: Date = .now,
+        lastUsedAt: Date = .now
+    ) {
+        self.id = id
+        self.value = value
+        self.name = name
+        self.createdAt = createdAt
+        self.lastUsedAt = lastUsedAt
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case value
+        case name
+        case createdAt
+        case lastUsedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        value = try container.decode(String.self, forKey: .value)
+        name = try container.decodeIfPresent(String.self, forKey: .name)
+        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? .now
+        lastUsedAt = try container.decodeIfPresent(Date.self, forKey: .lastUsedAt) ?? createdAt
+    }
 }
 
 struct FavoriteItem: Codable, Identifiable, Equatable, Hashable {

@@ -6,10 +6,12 @@ struct HistorySectionView: View {
     let shouldShowHistoryToggle: Bool
     @Binding var showingAllHistory: Bool
     let toggleHistoryCollapsed: () -> Void
-    let copy: (String) -> Void
+    let copyHistoryItem: (ClipboardItem) -> Void
     let deleteHistoryItem: (UUID) -> Void
     let isFavorite: (String) -> Bool
-    let toggleFavorite: (String) -> Void
+    let favoriteHistoryItem: (UUID) -> Void
+    let renameHistoryItem: (UUID, String) -> Void
+    let editHistoryItem: (UUID, String) -> Void
 
     var body: some View {
         SectionBlock(
@@ -22,11 +24,13 @@ struct HistorySectionView: View {
             } else {
                 ForEach(history) { item in
                     ClipboardRow(
-                        value: item.value,
+                        item: item,
                         isFavorite: isFavorite(item.value),
-                        copy: copy,
+                        copy: { _ in copyHistoryItem(item) },
                         delete: { deleteHistoryItem(item.id) },
-                        toggleFavorite: { toggleFavorite(item.value) }
+                        toggleFavorite: { favoriteHistoryItem(item.id) },
+                        rename: { renameHistoryItem(item.id, $0) },
+                        edit: { editHistoryItem(item.id, $0) }
                     )
                     .draggable(ClipboardDragPayload(itemID: item.id, source: .history, sectionID: nil))
                 }

@@ -11,6 +11,13 @@ struct ClipboardModelsTests {
     }
 
     @Test
+    func clipboardItemDisplayNameFallsBackToValueWhenNameIsMissingOrEmpty() {
+        #expect(ClipboardItem(value: "Raw value", name: nil).displayName == "Raw value")
+        #expect(ClipboardItem(value: "Raw value", name: "").displayName == "Raw value")
+        #expect(ClipboardItem(value: "Raw value", name: "Label").displayName == "Label")
+    }
+
+    @Test
     func menuPreviewTrimsWhitespaceAndReplacesTabsAndNewlines() {
         let value = " \nFirst\tSecond\nThird "
 

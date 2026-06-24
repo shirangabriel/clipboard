@@ -54,6 +54,10 @@ write_info_plist() {
 PLIST
 }
 
+sign_app_bundle() {
+  codesign --force --deep --sign - "$APP_BUNDLE"
+}
+
 build_app_bundle() {
   local configuration="${1:-debug}"
   local build_binary
@@ -71,6 +75,7 @@ build_app_bundle() {
   cp "$build_binary" "$APP_BINARY"
   chmod +x "$APP_BINARY"
   write_info_plist
+  sign_app_bundle
 }
 
 open_app() {

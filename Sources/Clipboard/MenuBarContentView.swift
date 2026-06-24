@@ -90,6 +90,12 @@ struct MenuBarContentView: View {
             deleteItem: { itemID, sectionID in
                 store.deleteSectionItem(itemID, in: sectionID)
             },
+            renameItem: { itemID, sectionID, name in
+                store.renameSectionItem(itemID, in: sectionID, to: name)
+            },
+            editItem: { itemID, sectionID, value in
+                store.editSectionItem(itemID, in: sectionID, to: value)
+            },
             moveHistoryItem: { itemID, sectionID in
                 store.moveHistoryItem(itemID, toSection: sectionID)
             },
@@ -97,7 +103,9 @@ struct MenuBarContentView: View {
                 store.moveSectionItem(itemID, from: sourceSectionID, to: targetSectionID)
             },
             isFavorite: store.isFavorite,
-            toggleFavorite: store.toggleFavorite
+            favoriteSectionItem: { itemID, sectionID in
+                store.favoriteSectionItem(itemID, in: sectionID)
+            }
         )
     }
 
@@ -108,10 +116,12 @@ struct MenuBarContentView: View {
             shouldShowHistoryToggle: shouldShowHistoryToggle,
             showingAllHistory: $showingAllHistory,
             toggleHistoryCollapsed: store.toggleHistoryCollapsed,
-            copy: copy,
+            copyHistoryItem: copyHistoryItem,
             deleteHistoryItem: store.deleteHistoryItem,
             isFavorite: store.isFavorite,
-            toggleFavorite: store.toggleFavorite
+            favoriteHistoryItem: store.favoriteHistoryItem,
+            renameHistoryItem: store.renameHistoryItem,
+            editHistoryItem: store.editHistoryItem
         )
     }
 
@@ -120,20 +130,41 @@ struct MenuBarContentView: View {
     }
 
     private var estimatedContentHeight: CGFloat {
-        let favoritesHeight = filteredFavorites.isEmpty ? 0 : 31 + CGFloat(filteredFavorites.count) * 33
+        let favoritesHeight = filteredFavorites.isEmpty ? 0 : 31 + estimatedFavoriteRowsHeight(filteredFavorites)
         let sectionsHeight = filteredSections.reduce(CGFloat(0)) { total, section in
-            let visibleItems = section.collapsed && searchText.isEmpty ? 0 : section.items.count
-            let emptyHintHeight = visibleItems == 0 && !(section.collapsed && searchText.isEmpty) ? CGFloat(30) : 0
-            return total + 39 + CGFloat(visibleItems) * 33 + emptyHintHeight
+            let visibleItems = section.collapsed && searchText.isEmpty ? [] : section.items
+            let emptyHintHeight = visibleItems.isEmpty && !(section.collapsed && searchText.isEmpty) ? CGFloat(30) : 0
+            return total + 39 + estimatedItemRowsHeight(visibleItems) + emptyHintHeight
         }
         let addSectionHeight = CGFloat(filteredSections.isEmpty ? 34 : 42)
-        let historyRows = CGFloat(filteredHistory.count)
         let historyToggleHeight = shouldShowHistoryToggle ? CGFloat(26) : 0
-        let historyHeight = store.state.settings.historyCollapsed ? CGFloat(21) : 31 + historyRows * 33 + historyToggleHeight
+        let historyHeight = store.state.settings.historyCollapsed ? CGFloat(21) : 31 + estimatedItemRowsHeight(filteredHistory) + historyToggleHeight
         let chromeHeight = CGFloat(112)
         let dividers = CGFloat(visibleDividerCount) * 21
 
         return chromeHeight + favoritesHeight + sectionsHeight + addSectionHeight + historyHeight + dividers
+    }
+
+    private func estimatedItemRowsHeight(_ items: [ClipboardItem]) -> CGFloat {
+        items.reduce(CGFloat(0)) { total, item in
+            total + (hasSubtitle(name: item.name, value: item.value) ? 49 : 33)
+        }
+    }
+
+    private func estimatedFavoriteRowsHeight(_ favorites: [FavoriteItem]) -> CGFloat {
+        favorites.reduce(CGFloat(0)) { total, favorite in
+            total + (hasSubtitle(name: favorite.name, value: favorite.value) ? 49 : 33)
+        }
+    }
+
+    private func hasSubtitle(name: String?, value: String) -> Bool {
+        guard let name = name?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !name.isEmpty
+        else {
+            return false
+        }
+
+        return name != value
     }
 
     private var visibleDividerCount: Int {
@@ -179,5 +210,10 @@ struct MenuBarContentView: View {
     private func createSection() {
         store.createSection(named: newSectionName)
         newSectionName = ""
+    }
+
+    private func copyHistoryItem(_ item: ClipboardItem) {
+        store.markHistoryItemUsed(item.id)
+        copy(item.value)
     }
 }
